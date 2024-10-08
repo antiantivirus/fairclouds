@@ -1,7 +1,5 @@
 <script>
-  // import { onMount } from "svelte";
-  import { createDirectus, authentication } from "@directus/sdk";
-  // import { useTranslations } from "../i18n/utils";
+  import { createDirectus, authentication, rest, login } from "@directus/sdk";
 
   export let lang;
 
@@ -11,32 +9,17 @@
   let isLoggedIn = false;
 
   const client = createDirectus("https://cms.fairclouds.life").with(
-    authentication("json"),
+    authentication("session", { credentials: "include" }),
   );
 
   const handleLogin = async () => {
     try {
-      await client.login(email, password);
-
-      console.log(client);
-
+      await client.login({ email, password });
       isLoggedIn = true;
-      // const response = await fetch("/api/login", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ email, password }),
-      // });
-
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.error || "Invalid login credentials");
-      // }
-
-      // const data = await response.json();
-      // console.log(data.message); // Login successful
-      // window.location.href = "en/dashboard";
+      error = "";
     } catch (err) {
-      error = err.message;
+      error = err.message || "Invalid login credentials";
+      isLoggedIn = false;
     }
   };
 </script>
