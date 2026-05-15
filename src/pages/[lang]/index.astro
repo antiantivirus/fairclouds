@@ -1,4 +1,7 @@
 ---
+// Don't prerender as this page will be unique for each user.
+export const prerender = false;
+
 import Layout from "../../layouts/Layout.astro";
 import { getLangFromUrl } from "../../i18n/utils";
 import directus from "../../lib/directus";
@@ -9,12 +12,6 @@ import serpentine from "../../images/serpentine.png";
 import aerocene from "../../images/aerocene.png";
 import salinas from "../../images/salinas.svg";
 import radicalxchange from "../../images/radicalxchange.svg";
-
-export async function getStaticPaths() {
-	const paths = [{ params: { lang: "en" } }, { params: { lang: "es" } }];
-
-	return paths;
-}
 
 const home = await directus.request(
 	readSingleton("home", {

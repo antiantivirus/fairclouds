@@ -1,13 +1,12 @@
 ---
+// Don't prerender as this page will be unique for each user.
+export const prerender = false;
+
 import directus from "../../../lib/directus";
 import { readItems } from "@directus/sdk";
 import { getLangFromUrl } from "../../../i18n/utils";
 import Layout from "../../../layouts/Layout.astro";
 import BlogSidebar from "../../../components/BlogSidebar.astro";
-
-export async function getStaticPaths() {
-  return [{ params: { lang: "en" } }, { params: { lang: "es" } }];
-}
 
 const lang = getLangFromUrl(Astro.url);
 // get lastest article and redirect to it

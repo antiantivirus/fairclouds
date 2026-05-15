@@ -1,53 +1,58 @@
 ---
+export const prerender = false;
+
 import directus from "../../../lib/directus";
 import { readItems } from "@directus/sdk";
 import Layout from "../../../layouts/Layout.astro";
 import FAQSidebar from "../../../components/FAQSidebar.astro";
 import Blocks from "../../../components/Blocks.astro";
 
-export async function getStaticPaths() {
-  const pages = await directus.request(
-    readItems("wiki", {
-      fields: ["*", { translations: ["*"] }],
-    }),
-  );
+const { lang, slug } = Astro.params;
 
-  let paths = [];
-
-  pages.forEach((page) => {
-    page.translations.forEach((translation) => {
-      if (["en", "es"].includes(translation.languages_code)) {
-        const path = {
-          params: { lang: translation.languages_code, slug: page.slug },
-          props: {
-            date: page.date_created,
-            translation,
-          },
-        };
-        paths.push(path);
-      }
-    });
-  });
-  return paths;
+if (!lang || !["en", "es"].includes(lang)) {
+	return Astro.redirect("/en");
 }
 
-const { lang, slug } = Astro.params;
-const page = Astro.props;
+const pageResults = await directus.request(
+	readItems("wiki", {
+		filter: {
+			slug: {
+				_eq: slug,
+			},
+		},
+		deep: {
+			translations: {
+				_filter: {
+					languages_code: {
+						_eq: lang,
+					},
+				},
+			},
+		},
+		fields: ["*", { translations: ["*"] }],
+		limit: 1,
+	}),
+);
+const page = pageResults[0];
+
+if (!page || !page.translations?.length) {
+	throw new Error("Page not found");
+}
+const translation = page.translations[0];
+
 const pages = await directus.request(
-  readItems("wiki", {
-    deep: {
-      translations: {
-        _filter: {
-          _and: [
-            {
-              languages_code: { _eq: lang },
-            },
-          ],
-        },
-      },
-    },
-    fields: ["*", { translations: ["*"] }],
-  }),
+	readItems("wiki", {
+		deep: {
+			translations: {
+				_filter: {
+					languages_code: {
+						_eq: lang,
+					},
+				},
+			},
+		},
+		fields: ["*", { translations: ["*"] }],
+	}),
 );
 ---
 
@@ -55,10 +60,10 @@ const pages = await directus.request(
   <div class="flex gap-28 justify-between px-4 py-2.5">
     <FAQSidebar pages={pages} lang={lang} />
     <main class="grow">
-      <h1>{page.translation.title}</h1>
+      <h1>{translation.title}</h1>
       {
-        page.translation.content?.blocks && (
-          <Blocks content={page.translation.content.blocks} />
+        translation.content?.blocks && (
+          <Blocks content={translation.content.blocks} />
         )
       }
     </main>
